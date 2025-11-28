@@ -25,6 +25,10 @@ export interface AuthResponse {
     user: User;
 }
 
+export interface SignupResponse {
+    success: boolean;
+}
+
 export interface RefreshTokenResponse {
     accessToken: string;
 }

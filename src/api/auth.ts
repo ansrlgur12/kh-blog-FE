@@ -1,5 +1,5 @@
 import apiClient from '../lib/api';
-import type { LoginRequest, SignupRequest, AuthResponse, RefreshTokenResponse, User } from '../types';
+import type { LoginRequest, SignupRequest, AuthResponse, RefreshTokenResponse, User, SignupResponse } from '../types';
 
 export const authApi = {
     // 로그인
@@ -9,8 +9,8 @@ export const authApi = {
     },
 
     // 회원가입
-    signup: async (data: SignupRequest): Promise<AuthResponse> => {
-        const response = await apiClient.post<AuthResponse>('/auth/register', data);
+    signup: async (data: SignupRequest): Promise<SignupResponse> => {
+        const response = await apiClient.post<SignupResponse>('/auth/register', data);
         return response.data;
     },
 
