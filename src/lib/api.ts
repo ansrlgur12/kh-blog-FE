@@ -82,7 +82,7 @@ apiClient.interceptors.response.use(
                 const userResponse = await authApi.getMe();
 
                 // 새로운 Access Token을 스토어에 저장
-                useAuthStore.getState().setAuth(response.accessToken, userResponse.user || userResponse);
+                useAuthStore.getState().setAuth(response.accessToken, userResponse);
                 // 대기 중인 요청들 처리
                 processQueue(null, response.accessToken);
 
