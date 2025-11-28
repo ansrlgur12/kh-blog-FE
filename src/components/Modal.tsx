@@ -46,19 +46,19 @@ export function Modal({
       />
 
       {/* 모달 창 */}
-      <div className="relative bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 border border-gray-200">
+      <div className="relative bg-white rounded-lg shadow-xl p-4 sm:p-6 max-w-md w-full mx-4 sm:mx-6 border border-gray-200">
         {/* 제목 */}
         {title && (
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
             {title}
           </h3>
         )}
 
         {/* 메시지 */}
-        <p className="text-gray-700 mb-6">{message}</p>
+        <p className="text-sm sm:text-base text-gray-700 mb-5 sm:mb-6">{message}</p>
 
         {/* 버튼 영역 */}
-        <div className="flex justify-center gap-3">
+        <div className="flex justify-center gap-2 sm:gap-3">
           {type === 'confirm' && (
             <button
               onClick={handleCancel}
@@ -69,7 +69,7 @@ export function Modal({
           )}
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition cursor-pointer"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition cursor-pointer"
           >
             {confirmText}
           </button>
