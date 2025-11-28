@@ -53,8 +53,12 @@ apiClient.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // 401 에러이고, 아직 재시도하지 않은 요청인 경우
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // 로그인/회원가입 API는 토큰 갱신 로직에서 제외
+        const isAuthEndpoint = originalRequest.url?.includes('/auth/login') || 
+                              originalRequest.url?.includes('/auth/register');
+        
+        // 401 에러이고, 아직 재시도하지 않은 요청인 경우 (인증 엔드포인트 제외)
+        if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
             // 이미 토큰 갱신 중이면 대기열에 추가
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
