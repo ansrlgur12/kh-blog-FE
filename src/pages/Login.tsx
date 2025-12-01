@@ -126,7 +126,6 @@ export function Login() {
                     </p>
                 </div>
             </div>
-        </div>
     );
 }
 
