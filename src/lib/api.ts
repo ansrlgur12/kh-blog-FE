@@ -4,8 +4,8 @@ import { authApi } from '../api/auth';
 
 // API 기본 URL (환경 변수로 관리)
 // .env 파일에 VITE_API_BASE_URL을 설정하거나, 기본값 사용
-// export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-export const API_BASE_URL = 'http://localhost:3000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// export const API_BASE_URL = 'http://localhost:3000';
 
 // Axios 인스턴스 생성
 const apiClient: AxiosInstance = axios.create({
