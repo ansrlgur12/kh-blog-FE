@@ -4,7 +4,8 @@ import { authApi } from '../api/auth';
 
 // API 기본 URL (환경 변수로 관리)
 // .env 파일에 VITE_API_BASE_URL을 설정하거나, 기본값 사용
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+export const API_BASE_URL = 'http://localhost:3000';
 
 // Axios 인스턴스 생성
 const apiClient: AxiosInstance = axios.create({
@@ -12,11 +13,35 @@ const apiClient: AxiosInstance = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true, // httpOnly 쿠키 전송을 위해 필요
 });
 
 // 요청 인터셉터: JWT 토큰 자동 추가
 apiClient.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
+    async (config: InternalAxiosRequestConfig) => {
+        const authStore = useAuthStore.getState();
+        
+        // 인증 복원 중인 경우, /auth/refresh와 /auth/me 요청만 허용
+        const isAuthRestoreEndpoint = config.url?.includes('/auth/refresh') || 
+                                      config.url?.includes('/auth/me');
+        const isPublicEndpoint = config.url?.includes('/auth/login') || 
+                                config.url?.includes('/auth/register');
+        
+        // 복원 중이고, 복원 관련 엔드포인트가 아니고, 공개 엔드포인트도 아닌 경우 대기
+        if (authStore.isRestoring && !isAuthRestoreEndpoint && !isPublicEndpoint) {
+            // 복원이 완료될 때까지 대기 (최대 5초)
+            const maxWait = 5000;
+            const startTime = Date.now();
+            
+            while (authStore.isRestoring && (Date.now() - startTime) < maxWait) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                // 상태 재확인
+                if (!useAuthStore.getState().isRestoring) {
+                    break;
+                }
+            }
+        }
+        
         // Zustand 스토어에서 토큰 가져오기 (메모리에서)
         // getState()를 사용하여 최신 상태 가져오기
         const token = useAuthStore.getState().accessToken;
@@ -54,9 +79,10 @@ apiClient.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // 로그인/회원가입 API는 토큰 갱신 로직에서 제외
+        // 로그인/회원가입/refresh API는 토큰 갱신 로직에서 제외
         const isAuthEndpoint = originalRequest.url?.includes('/auth/login') || 
-                              originalRequest.url?.includes('/auth/register');
+                              originalRequest.url?.includes('/auth/register') ||
+                              originalRequest.url?.includes('/auth/refresh');
         
         // 401 에러이고, 아직 재시도하지 않은 요청인 경우 (인증 엔드포인트 제외)
         if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {

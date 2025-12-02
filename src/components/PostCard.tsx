@@ -1,0 +1,52 @@
+import type { Posts } from "../types";
+
+export const PostCard = ({ post }: { post: Posts }) => {
+    return (
+        <div
+            className="cursor-pointer bg-white shadow-sm overflow-hidden w-[calc((100%-3*1rem)/4)] sm:w-[calc((100%-3*1.5rem)/4)]"
+        >
+            {post.post_thumbnail && post.post_thumbnail !== 'noimage' ? (
+                <img
+                    className="w-full h-48 object-cover"
+                    src={post.post_thumbnail}
+                    alt={post.post_title}
+                />
+            ) : (
+                <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-400">No Image</span>
+                </div>
+            )}
+
+            <div className="p-4">
+                <h2 className="text-base font-bold mb-2 line-clamp-2 text-left">{post.post_title}</h2>
+
+                {/* 컨텐츠 미리보기 */}
+                {post.post_content && (
+                    <p className="text-sm text-gray-500 mb-3 line-clamp-3 text-left h-16">
+                        {post.post_content.replace(/[#*`]/g, '').replace(/!\[.*?\]\(.*?\)/g, '').substring(0, 100)}...
+                    </p>
+                )}
+
+                {/* 날짜와 댓글 수 */}
+                <div className="text-xs text-gray-400 mb-3 text-left">
+                    {post.post_created_at ? new Date(post.post_created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }) : '날짜 없음'}
+                </div>
+
+
+                {/* 작성자 정보 */}
+                <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+                        <p className="text-xs text-gray-500">by {post.author?.user_nickname || post.user_nickname}</p>
+                    </div>
+                    {(post as any).like_count !== undefined && (
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <span>❤</span>
+                            <span>{(post as any).like_count}</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}

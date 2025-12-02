@@ -5,6 +5,8 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { uploadApi } from '../api/upload';
 import { API_BASE_URL } from '../lib/api';
+import type { Post } from '../types';
+import { postApi } from '../api/post';
 
 export function Write() {
     const [title, setTitle] = useState('');
@@ -283,12 +285,24 @@ export function Write() {
                         att_target: '0', // 임시저장이므로 게시글 ID는 0
                     });
 
+                    // 응답이 배열인지 객체인지 확인
+                    const uploadedFiles = Array.isArray(uploadResult) 
+                        ? uploadResult 
+                        : (uploadResult.files || []);
+
                     // 임시 URL과 서버 URL 매핑
                     matches.forEach((match, index) => {
                         const tempUrl = match[2];
-                        if (uploadResult.files[index]) {
-                            const serverUrl = `${API_BASE_URL}/${uploadResult.files[index].att_path}`;
-                            tempUrlToServerUrl.set(tempUrl, serverUrl);
+                        if (uploadedFiles[index]) {
+                            // att_filepath 또는 att_path 사용
+                            const filePath = uploadedFiles[index].att_filepath || uploadedFiles[index].att_path;
+                            if (filePath) {
+                                // filePath가 이미 전체 URL이거나 /로 시작하는 경로인지 확인
+                                const serverUrl = filePath.startsWith('http') 
+                                    ? filePath 
+                                    : `${API_BASE_URL}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
+                                tempUrlToServerUrl.set(tempUrl, serverUrl);
+                            }
                         }
                     });
 
@@ -331,6 +345,9 @@ export function Write() {
             const tempUrlRegex = /!\[([^\]]*)\]\((blob:[^\)]+)\)/g;
             const matches = Array.from(content.matchAll(tempUrlRegex));
 
+            let newContent = content;
+            let thumbnail = 'noimage';
+
             if (matches.length > 0) {
                 // 임시 URL에 해당하는 File 객체들 수집
                 const filesToUpload: File[] = [];
@@ -352,17 +369,28 @@ export function Write() {
                         att_target: '0', // 게시글 ID는 나중에 업데이트될 수 있음
                     });
 
+                    // 응답이 배열인지 객체인지 확인
+                    const uploadedFiles = Array.isArray(uploadResult) 
+                        ? uploadResult 
+                        : (uploadResult.files || []);
+
                     // 임시 URL과 서버 URL 매핑
                     matches.forEach((match, index) => {
                         const tempUrl = match[2];
-                        if (uploadResult.files[index]) {
-                            const serverUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/${uploadResult.files[index].att_path}`;
-                            tempUrlToServerUrl.set(tempUrl, serverUrl);
+                        if (uploadedFiles[index]) {
+                            // att_filepath 또는 att_path 사용
+                            const filePath = uploadedFiles[index].att_filepath || uploadedFiles[index].att_path;
+                            if (filePath) {
+                                // filePath가 이미 전체 URL이거나 /로 시작하는 경로인지 확인
+                                const serverUrl = filePath.startsWith('http') 
+                                    ? filePath 
+                                    : `${API_BASE_URL}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
+                                tempUrlToServerUrl.set(tempUrl, serverUrl);
+                            }
                         }
                     });
 
                     // content에서 임시 URL을 서버 URL로 교체
-                    let newContent = content;
                     tempUrlToServerUrl.forEach((serverUrl, tempUrl) => {
                         // 정규식으로 정확히 매칭하여 교체
                         const regex = new RegExp(`(!\\[[^\\]]*\\]\\()${tempUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\))`, 'g');
@@ -381,8 +409,33 @@ export function Write() {
                 }
             }
 
+            // 첫 번째 이미지 찾기 (업데이트된 content에서 이미지 URL 추출)
+            const imageRegex = /!\[([^\]]*)\]\(([^\)]+)\)/g;
+            const imageMatches = Array.from(newContent.matchAll(imageRegex));
+            if (imageMatches.length > 0) {
+                // 첫 번째 이미지 URL 사용
+                const firstImageUrl = imageMatches[0][2];
+                // blob URL이 아닌 실제 서버 URL인 경우에만 사용
+                if (!firstImageUrl.startsWith('blob:')) {
+                    thumbnail = firstImageUrl;
+                }
+            }
+
+            const postData: Post = {
+                post_title: title,
+                post_content: newContent,
+                post_thumbnail: thumbnail,
+                post_status: 'Y', // 게시글
+            };
+            const response = await postApi.createPost(postData);
+            if (response.success) {
+                alert('등록되었습니다.');
+                navigate('/');
+            } else {
+                alert('등록에 실패했습니다.');
+            }
+
             // TODO: 출간 API 호출 (제목, 내용 저장)
-            alert('등록되었습니다.');
         } catch (error) {
             console.error('파일 업로드 실패:', error);
             alert('파일 업로드에 실패했습니다.');

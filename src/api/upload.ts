@@ -9,17 +9,18 @@ export interface UploadFileRequest {
 // 업로드된 파일 정보 타입
 export interface UploadedFile {
     att_idx: number;
-    att_original_name: string;
-    att_saved_name: string;
-    att_path: string;
-    att_size: number;
-    att_target_type: string;
-    att_target: string;
-    created_at: string;
+    att_original_name?: string;
+    att_saved_name?: string;
+    att_path?: string;
+    att_filepath?: string; // 백엔드 응답에 따라 att_path 또는 att_filepath 사용
+    att_size?: number;
+    att_target_type?: string;
+    att_target?: string;
+    created_at?: string;
 }
 
-// 파일 업로드 응답 타입
-export interface UploadFileResponse {
+// 파일 업로드 응답 타입 (배열 또는 객체 형태 모두 지원)
+export type UploadFileResponse = UploadedFile[] | {
     files: UploadedFile[];
     message?: string;
 }
