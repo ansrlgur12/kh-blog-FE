@@ -43,23 +43,6 @@ export function WriteDetail() {
         setLikes(prev => isLiked ? prev - 1 : prev + 1);
     }
 
-    // 기술 스킬 리스트 (예시 데이터)
-    const techSkills = [
-        { name: "Linux", description: "모든 기술 스킬의 기반" },
-        { name: "Bash / Python", description: "자동화의 첫걸음" },
-        { name: "Docker", description: "\"환경 구축 지옥\"에서 해방" },
-        { name: "Git", description: "개발자라고 불리기 위한 필수 스킬" },
-        { name: "CI/CD", description: "\"코드 작성자\"에서 \"소프트웨어 전달자\"로" },
-        { name: "API 개발과 테스트", description: "올바른 도구 선택이 학습 효율을 바꾼다" },
-        { name: "Apidog", description: "API 개발의 번거로움을 한 번에 해결" },
-        { name: "클라우드 (AWS/GCP/Azure)", description: "하나를 선택해서 시작하라" },
-        { name: "IaC", description: "중급 개발자로 가는 계단" },
-        { name: "AI 활용", description: "왜 \"기초\"가 예전보다 중요한가" },
-    ];
-
-    // 태그 예시 (실제 데이터가 없으므로 임시)
-    const tags = ["AI 활용", "API 개발", "개발 도구", "비전공 개발자", "프로그래밍 학습"];
-
     if (!post) {
         return (
             <div className="flex items-center justify-center min-h-screen">
