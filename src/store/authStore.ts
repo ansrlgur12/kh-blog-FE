@@ -13,6 +13,7 @@ interface AuthState {
   setAccessToken: (accessToken: string) => void; // 토큰만 임시로 설정 (인증 복원 중 사용)
   clearAuth: () => void;
   setRestoring: (isRestoring: boolean) => void; // 인증 복원 상태 설정
+  updateUser: (user: User) => void; // 사용자 정보 업데이트
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -50,6 +51,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   // 인증 복원 상태 설정
   setRestoring: (isRestoring: boolean) => {
     set({ isRestoring });
+  },
+  
+  // 사용자 정보 업데이트
+  updateUser: (user: User) => {
+    set({ user });
   },
 }));
 

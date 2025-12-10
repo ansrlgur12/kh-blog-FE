@@ -3,8 +3,13 @@ export interface User {
     user_id: number;
     user_email: string;
     user_nickname: string;
+    user_image?: string;
 }
 
+// 유저 업데이트
+export interface UpdateProfileRequest {
+    user: User;
+}
 
 // 로그인 요청 타입
 export interface LoginRequest {
@@ -52,7 +57,8 @@ export interface Posts {
     user_nickname: string;
     author: {
         user_id: number,
-        user_nickname: string
+        user_nickname: string,
+        user_image: string;
     };
 }
 
@@ -82,4 +88,10 @@ export interface getPostsResponse {
         hasNextPage: boolean;
         hasPrevPage: boolean;
     };
+}
+
+export interface getPostResponse {
+    post: Posts;
+    success: boolean;
+    message: string;
 }

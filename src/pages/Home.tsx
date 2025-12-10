@@ -6,7 +6,7 @@ import { PostCard } from "../components/PostCard";
 export function Home() {
 
   const [posts, setPosts] = useState<Posts[]>([]);
-  const [page, setPage] = useState(1);
+  // const [page, setPage] = useState(1);
 
   useEffect(() => {
     getPosts();

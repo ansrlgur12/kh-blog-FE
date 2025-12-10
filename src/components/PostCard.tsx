@@ -1,9 +1,17 @@
+import { useNavigate } from "react-router-dom";
 import type { Posts } from "../types";
+import { API_BASE_URL } from "../lib/api";
 
 export const PostCard = ({ post }: { post: Posts }) => {
+
+    const navigate = useNavigate();
+
     return (
         <div
             className="cursor-pointer bg-white shadow-sm overflow-hidden w-[calc((100%-3*1rem)/4)] sm:w-[calc((100%-3*1.5rem)/4)]"
+            onClick={() => {
+                navigate(`/detail/${post.post_id}`);
+            }}
         >
             {post.post_thumbnail && post.post_thumbnail !== 'noimage' ? (
                 <img
@@ -36,7 +44,26 @@ export const PostCard = ({ post }: { post: Posts }) => {
                 {/* 작성자 정보 */}
                 <div className="flex items-center justify-between border-t border-gray-200 pt-3">
                     <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-gray-300 rounded-full"></div>
+                        <div className="w-6 h-6 bg-gray-300 rounded-full">
+                            {post.author?.user_image ? (
+                                <img
+                                    src={API_BASE_URL + post.author?.user_image}
+                                    alt={post.author?.user_nickname}
+                                    className="w-6 h-6 rounded-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                                    <svg
+                                        className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                    >
+                                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                            )}
+
+                        </div>
                         <p className="text-xs text-gray-500">by {post.author?.user_nickname || post.user_nickname}</p>
                     </div>
                     {(post as any).like_count !== undefined && (
