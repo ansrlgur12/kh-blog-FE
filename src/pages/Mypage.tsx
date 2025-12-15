@@ -2,7 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { uploadApi } from '../api/upload';
 import { userApi } from '../api/user';
+import { postApi } from '../api/post';
 import { API_BASE_URL } from '../lib/api';
+import type { Posts } from '../types';
+import { PostListItem } from '../components/PostListItem';
 
 type TabType = 'info' | 'posts' | 'drafts';
 
@@ -17,6 +20,8 @@ export function Mypage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [myPosts, setMyPosts] = useState<Posts[]>([]);
+    const [isLoadingPosts, setIsLoadingPosts] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -24,6 +29,33 @@ export function Mypage() {
             setProfileImage(user.user_image || null);
         }
     }, [user]);
+
+    // 내 글 목록 가져오기
+    useEffect(() => {
+        if (activeTab === 'posts' && user?.user_id) {
+            fetchMyPosts();
+        }
+    }, [activeTab, user?.user_id]);
+
+    const fetchMyPosts = async () => {
+        if (!user?.user_id) return;
+
+        setIsLoadingPosts(true);
+        setError('');
+
+        try {
+            const response = await postApi.getPosts({
+                page: 1,
+                user_id: user.user_id,
+            });
+            setMyPosts(response.posts || []);
+        } catch (err: any) {
+            setError(err.response?.data?.message || '글 목록을 불러오는데 실패했습니다.');
+            setMyPosts([]);
+        } finally {
+            setIsLoadingPosts(false);
+        }
+    };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -261,8 +293,23 @@ export function Mypage() {
             case 'posts':
                 return (
                     <div className="bg-white rounded-lg p-4 sm:p-6">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">내 글 목록</h2>
-                        <p className="text-gray-500">내 글 목록 기능은 준비 중입니다.</p>
+                        
+                        {isLoadingPosts ? (
+                            <div className="text-center py-12 text-gray-400">
+                                <p>글 목록을 불러오는 중...</p>
+                            </div>
+                        ) : myPosts.length > 0 ? (
+                            <div className="space-y-4">
+                                {myPosts.map((post) => (
+                                    <PostListItem key={post.post_id} post={post} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-12 text-gray-400">
+                                <p className="text-base sm:text-lg">아직 작성한 글이 없습니다.</p>
+                                <p className="text-xs sm:text-sm mt-2">첫 번째 글을 작성해보세요!</p>
+                            </div>
+                        )}
                     </div>
                 );
             case 'drafts':

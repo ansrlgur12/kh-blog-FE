@@ -76,6 +76,7 @@ export interface TempSavePost {
 
 export interface getPostsRequest {
     page: number;
+    user_id?: number;
 }
 
 export interface getPostsResponse {
