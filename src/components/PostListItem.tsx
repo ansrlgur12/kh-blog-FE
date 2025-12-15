@@ -9,7 +9,12 @@ export const PostListItem = ({ post }: { post: Posts }) => {
         <div
             className="cursor-pointer bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow mb-4"
             onClick={() => {
-                navigate(`/detail/${post.post_id}`);
+                // 임시저장글인 경우 Write 페이지로 이동
+                if (post.post_status === 'T') {
+                    navigate(`/write?postId=${post.post_id}`);
+                } else {
+                    navigate(`/detail/${post.post_id}`);
+                }
             }}
         >
             <div className="flex flex-row gap-4 p-4">

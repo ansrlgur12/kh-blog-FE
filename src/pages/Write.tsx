@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
@@ -11,21 +11,49 @@ import { postApi } from '../api/post';
 export function Write() {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState(``);
+    const [postStatus, setPostStatus] = useState('T');
     const [tempFileMap, setTempFileMap] = useState<Map<string, File>>(new Map());
     // alt/파일명으로 File 객체를 찾기 위한 Map
     // const [fileByAltMap, setFileByAltMap] = useState<Map<string, File>>(new Map());
     const [isUploading, setIsUploading] = useState(false);
+    const [isLoadingPost, setIsLoadingPost] = useState(false);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const previewRef = useRef<HTMLDivElement>(null);
     const tempFileMapRef = useRef<Map<string, File>>(new Map());
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const postId = searchParams.get('postId');
 
     // tempFileMap 변경 시 ref도 업데이트
     useEffect(() => {
         tempFileMapRef.current = tempFileMap;
     }, [tempFileMap]);
+
+    // URL 파라미터로 postId가 있으면 임시저장글 불러오기
+    useEffect(() => {
+        if (postId) {
+            loadTempPost(postId);
+        }
+    }, [postId]);
+
+    const loadTempPost = async (id: string) => {
+        setIsLoadingPost(true);
+        try {
+            const response = await postApi.getPost(id);
+            if (response.success && response.post) {
+                setTitle(response.post.post_title);
+                setContent(response.post.post_content);
+                setPostStatus(response.post.post_status);
+            }
+        } catch (error) {
+            console.error('임시저장글 불러오기 실패:', error);
+            alert('임시저장글을 불러오는데 실패했습니다.');
+        } finally {
+            setIsLoadingPost(false);
+        }
+    };
 
     // Write 페이지 진입 시 body 스크롤 비활성화
     useEffect(() => {
@@ -255,88 +283,8 @@ export function Write() {
         }
     };
 
-    const handleSave = async () => {
-        if (isUploading) return;
 
-        setIsUploading(true);
-        try {
-            // content에서 임시 URL 찾기 (blob:로 시작하는 URL)
-            const tempUrlRegex = /!\[([^\]]*)\]\((blob:[^\)]+)\)/g;
-            const matches = Array.from(content.matchAll(tempUrlRegex));
-
-            if (matches.length > 0) {
-                // 임시 URL에 해당하는 File 객체들 수집
-                const filesToUpload: File[] = [];
-                const tempUrlToServerUrl: Map<string, string> = new Map();
-
-                for (const match of matches) {
-                    const tempUrl = match[2];
-                    const file = tempFileMap.get(tempUrl);
-
-                    if (file) {
-                        filesToUpload.push(file);
-                    }
-                }
-
-                // 파일 업로드
-                if (filesToUpload.length > 0) {
-                    const uploadResult = await uploadApi.uploadFiles('posts', filesToUpload, {
-                        att_target_type: 'POST',
-                        att_target: '0', // 임시저장이므로 게시글 ID는 0
-                    });
-
-                    // 응답이 배열인지 객체인지 확인
-                    const uploadedFiles = Array.isArray(uploadResult) 
-                        ? uploadResult 
-                        : (uploadResult.files || []);
-
-                    // 임시 URL과 서버 URL 매핑
-                    matches.forEach((match, index) => {
-                        const tempUrl = match[2];
-                        if (uploadedFiles[index]) {
-                            // att_filepath 또는 att_path 사용
-                            const filePath = uploadedFiles[index].att_filepath || uploadedFiles[index].att_path;
-                            if (filePath) {
-                                // filePath가 이미 전체 URL이거나 /로 시작하는 경로인지 확인
-                                const serverUrl = filePath.startsWith('http') 
-                                    ? filePath 
-                                    : `${API_BASE_URL}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
-                                tempUrlToServerUrl.set(tempUrl, serverUrl);
-                            }
-                        }
-                    });
-
-                    // content에서 임시 URL을 서버 URL로 교체
-                    let newContent = content;
-                    tempUrlToServerUrl.forEach((serverUrl, tempUrl) => {
-                        // 정규식으로 정확히 매칭하여 교체
-                        const regex = new RegExp(`(!\\[[^\\]]*\\]\\()${tempUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\))`, 'g');
-                        newContent = newContent.replace(regex, `$1${serverUrl}$2`);
-
-                        // Map에서 제거 및 URL 해제
-                        setTempFileMap((prev) => {
-                            const newMap = new Map(prev);
-                            newMap.delete(tempUrl);
-                            URL.revokeObjectURL(tempUrl);
-                            return newMap;
-                        });
-                    });
-
-                    setContent(newContent);
-                }
-            }
-
-            // TODO: 임시저장 API 호출 (제목, 내용 저장)
-            alert('임시저장되었습니다.');
-        } catch (error) {
-            console.error('파일 업로드 실패:', error);
-            alert('파일 업로드에 실패했습니다.');
-        } finally {
-            setIsUploading(false);
-        }
-    };
-
-    const handlePublish = async () => {
+    const handlePublish = async (status: string) => {
         if (isUploading) return;
 
         setIsUploading(true);
@@ -370,8 +318,8 @@ export function Write() {
                     });
 
                     // 응답이 배열인지 객체인지 확인
-                    const uploadedFiles = Array.isArray(uploadResult) 
-                        ? uploadResult 
+                    const uploadedFiles = Array.isArray(uploadResult)
+                        ? uploadResult
                         : (uploadResult.files || []);
 
                     // 임시 URL과 서버 URL 매핑
@@ -382,8 +330,8 @@ export function Write() {
                             const filePath = uploadedFiles[index].att_filepath || uploadedFiles[index].att_path;
                             if (filePath) {
                                 // filePath가 이미 전체 URL이거나 /로 시작하는 경로인지 확인
-                                const serverUrl = filePath.startsWith('http') 
-                                    ? filePath 
+                                const serverUrl = filePath.startsWith('http')
+                                    ? filePath
                                     : `${API_BASE_URL}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
                                 tempUrlToServerUrl.set(tempUrl, serverUrl);
                             }
@@ -425,14 +373,44 @@ export function Write() {
                 post_title: title,
                 post_content: newContent,
                 post_thumbnail: thumbnail,
-                post_status: 'Y', // 게시글
+                post_status: status, // 게시글
             };
-            const response = await postApi.createPost(postData);
-            if (response.success) {
-                alert('등록되었습니다.');
-                navigate('/');
+            if (status === 'T') {
+                if (postId) {
+                    const response = await postApi.updatePost(postId, postData);
+                    if (response.success) {
+                        alert('임시저장되었습니다.');
+                        navigate('/');
+                    } else {
+                        alert('임시저장에 실패했습니다.');
+                    }
+                } else {
+                    const response = await postApi.tempPost(postData);
+                    if (response.success) {
+                        alert('임시저장되었습니다.');
+                        navigate('/');
+                    } else {
+                        alert('임시저장에 실패했습니다.');
+                    }
+                }
             } else {
-                alert('등록에 실패했습니다.');
+                if (postId) {
+                    const response = await postApi.updatePost(postId, postData);
+                    if (response.success) {
+                        alert('등록되었습니다.');
+                        navigate('/');
+                    } else {
+                        alert('등록에 실패했습니다.');
+                    }
+                } else {
+                    const response = await postApi.createPost(postData);
+                    if (response.success) {
+                        alert('등록되었습니다.');
+                        navigate('/');
+                    } else {
+                        alert('등록에 실패했습니다.');
+                    }
+                }
             }
 
             // TODO: 출간 API 호출 (제목, 내용 저장)
@@ -443,6 +421,14 @@ export function Write() {
             setIsUploading(false);
         }
     };
+
+    if (isLoadingPost) {
+        return (
+            <div className="flex items-center justify-center fixed inset-0 bg-white z-40" style={{ height: '100vh', width: '100vw' }}>
+                <p className="text-gray-500">임시저장글을 불러오는 중...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col fixed inset-0 bg-white z-40 overflow-hidden" style={{ height: '100vh', width: '100vw' }}>
@@ -701,22 +687,25 @@ export function Write() {
                 </button>
 
                 <div className="flex items-center gap-3">
+                    {postStatus !== 'Y' &&
+                        <button
+                            onClick={() => handlePublish('T')}
+                            disabled={isUploading}
+                            className="px-4 py-2 text-green-600 bg-white border border-green-600 rounded-lg hover:bg-green-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isUploading ? '업로드 중...' : '임시저장'}
+                        </button>
+                    }
+
                     <button
-                        onClick={handleSave}
-                        disabled={isUploading}
-                        className="px-4 py-2 text-green-600 bg-white border border-green-600 rounded-lg hover:bg-green-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isUploading ? '업로드 중...' : '임시저장'}
-                    </button>
-                    <button
-                        onClick={handlePublish}
+                        onClick={() => handlePublish('Y')}
                         disabled={isUploading}
                         className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {isUploading ? '업로드 중...' : '등록하기'}
+                        {isUploading ? '업로드 중...' : `${postStatus === 'Y' ? '저장하기' : '등록하기'}`}
                     </button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

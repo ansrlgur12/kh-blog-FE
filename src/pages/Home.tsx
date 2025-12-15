@@ -26,11 +26,11 @@ export function Home() {
           전체
         </button>
         <button className="pb-3 sm:pb-4 px-1 border-b-2 border-transparent text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">
-          인기
+          조회수
         </button>
-        <button className="pb-3 sm:pb-4 px-1 border-b-2 border-transparent text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">
+        {/* <button className="pb-3 sm:pb-4 px-1 border-b-2 border-transparent text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">
           최신
-        </button>
+        </button> */}
       </div>
 
       {posts.length > 0 ? (

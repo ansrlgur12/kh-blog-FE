@@ -53,22 +53,32 @@ export function Mypage() {
     // 내 글 목록 가져오기
     useEffect(() => {
         if (activeTab === 'posts' && user?.user_id) {
-            fetchMyPosts();
+            fetchMyPosts('posts');
+        } else if (activeTab === 'temp' && user?.user_id) {
+            fetchMyPosts('temp');
         }
     }, [activeTab, user?.user_id]);
 
-    const fetchMyPosts = async () => {
+    const fetchMyPosts = async (post_status: string) => {
         if (!user?.user_id) return;
 
         setIsLoadingPosts(true);
         setError('');
 
         try {
-            const response = await postApi.getPosts({
-                page: 1,
-                user_id: user.user_id,
-            });
-            setMyPosts(response.posts || []);
+            if (post_status === 'posts') {
+                const response = await postApi.getPosts({
+                    page: 1,
+                    user_id: user.user_id,
+                });
+                setMyPosts(response.posts || []);
+            } else if (post_status === 'temp') {
+                const response = await postApi.getTempPosts({
+                    page: 1,
+                    user_id: user.user_id,
+                });
+                setMyPosts(response.posts || []);
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || '글 목록을 불러오는데 실패했습니다.');
             setMyPosts([]);
@@ -310,10 +320,10 @@ export function Mypage() {
                         </div>
                     </div>
                 );
-            case 'posts':
+            default:
                 return (
                     <div className="bg-white rounded-lg p-4 sm:p-6">
-                        
+
                         {isLoadingPosts ? (
                             <div className="text-center py-12 text-gray-400">
                                 <p>글 목록을 불러오는 중...</p>
@@ -332,15 +342,6 @@ export function Mypage() {
                         )}
                     </div>
                 );
-            case 'temp':
-                return (
-                    <div className="bg-white rounded-lg p-4 sm:p-6">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">임시저장 글</h2>
-                        <p className="text-gray-500">임시저장 글 기능은 준비 중입니다.</p>
-                    </div>
-                );
-            default:
-                return null;
         }
     };
 
@@ -368,8 +369,8 @@ export function Mypage() {
                             <button
                                 onClick={() => handleTabChange('info')}
                                 className={`text-left px-4 py-2 rounded-lg transition ${activeTab === 'info'
-                                        ? 'bg-gray-100 text-gray-900 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    ? 'bg-gray-100 text-gray-900 font-medium'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                     }`}
                             >
                                 정보수정
@@ -377,8 +378,8 @@ export function Mypage() {
                             <button
                                 onClick={() => handleTabChange('posts')}
                                 className={`text-left px-4 py-2 rounded-lg transition ${activeTab === 'posts'
-                                        ? 'bg-gray-100 text-gray-900 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    ? 'bg-gray-100 text-gray-900 font-medium'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                     }`}
                             >
                                 내 글 목록
@@ -386,8 +387,8 @@ export function Mypage() {
                             <button
                                 onClick={() => handleTabChange('temp')}
                                 className={`text-left px-4 py-2 rounded-lg transition ${activeTab === 'temp'
-                                        ? 'bg-gray-100 text-gray-900 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    ? 'bg-gray-100 text-gray-900 font-medium'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                     }`}
                             >
                                 임시저장 글

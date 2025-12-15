@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { postApi } from "../api/post";
 import type { Posts } from "../types";
+import { useAuthStore } from "../store/authStore";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 
 export function WriteDetail() {
     const { postId } = useParams();
+    const navigate = useNavigate();
+    const { user } = useAuthStore();
     const [post, setPost] = useState<Posts>();
     const [likes, setLikes] = useState(105);
     const [isLiked, setIsLiked] = useState(false);
@@ -43,6 +46,36 @@ export function WriteDetail() {
         setLikes(prev => isLiked ? prev - 1 : prev + 1);
     }
 
+    // 본인 글인지 확인
+    const isMyPost = user && post && (post.author?.user_id === user.user_id);
+
+    // 수정 버튼 클릭 핸들러
+    const handleEdit = () => {
+        if (postId) {
+            navigate(`/write?postId=${postId}`);
+        }
+    }
+
+    // 삭제 버튼 클릭 핸들러
+    const handleDelete = async () => {
+        if (!postId) return;
+        
+        if (window.confirm('정말 이 글을 삭제하시겠습니까?')) {
+            try {
+                const response = await postApi.deletePost(postId);
+                if (response.success) {
+                    alert('글이 삭제되었습니다.');
+                    navigate('/');
+                } else {
+                    alert('글 삭제에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('글 삭제 실패:', error);
+                alert('글 삭제에 실패했습니다.');
+            }
+        }
+    }
+
     if (!post) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -62,7 +95,7 @@ export function WriteDetail() {
                         {post.post_title}
                     </h1>
 
-                    {/* 작성자 정보 및 팔로우 버튼 */}
+                    {/* 작성자 정보 및 수정/삭제 버튼 */}
                     <div className="flex items-center justify-between mb-16">
                         <div className="flex items-center gap-3">
                             <span className="text-base text-gray-900 font-medium">
@@ -73,7 +106,23 @@ export function WriteDetail() {
                                 {formatDate(post.post_created_at)}
                             </span>
                         </div>
-                       
+                        {isMyPost && (
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleEdit}
+                                    className="text-sm text-gray-500 hover:text-gray-900 transition cursor-pointer"
+                                >
+                                    수정
+                                </button>
+                                <span className="text-gray-400">·</span>
+                                <button
+                                    onClick={handleDelete}
+                                    className="text-sm text-gray-500 hover:text-red-600 transition cursor-pointer"
+                                >
+                                    삭제
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                   
