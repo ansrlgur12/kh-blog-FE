@@ -55,6 +55,7 @@ export interface Posts {
     post_status: string;
     post_created_at: string;
     user_nickname: string;
+    post_view: number,
     author: {
         user_id: number,
         user_nickname: string,
@@ -77,6 +78,7 @@ export interface TempSavePost {
 export interface getPostsRequest {
     page: number;
     user_id?: number;
+    sort?: string;
 }
 
 export interface getPostsResponse {

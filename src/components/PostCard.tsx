@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import type { Posts } from "../types";
 import { API_BASE_URL } from "../lib/api";
+import { LuEye } from "react-icons/lu";
 
 export const PostCard = ({ post }: { post: Posts }) => {
 
@@ -36,8 +37,14 @@ export const PostCard = ({ post }: { post: Posts }) => {
                 )}
 
                 {/* 날짜와 댓글 수 */}
-                <div className="text-xs text-gray-400 mb-3 text-left">
+
+                <div className="text-xs text-gray-400 mb-3 text-left flex justify-between">
                     {post.post_created_at ? new Date(post.post_created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }) : '날짜 없음'}
+
+
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <LuEye /> {post.post_view}
+                    </span>
                 </div>
 
 

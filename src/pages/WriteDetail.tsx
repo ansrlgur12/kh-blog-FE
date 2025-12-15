@@ -24,7 +24,7 @@ export function WriteDetail() {
             const rsp = await postApi.getPost(postId as string);
             if (rsp.success) {
                 setPost(rsp.post);
-                console.log(rsp.post);
+                // console.log(rsp.post);
 
                 window.scrollTo(0, 0);
             }
@@ -59,7 +59,7 @@ export function WriteDetail() {
     // 삭제 버튼 클릭 핸들러
     const handleDelete = async () => {
         if (!postId) return;
-        
+
         if (window.confirm('정말 이 글을 삭제하시겠습니까?')) {
             try {
                 const response = await postApi.deletePost(postId);
@@ -87,7 +87,7 @@ export function WriteDetail() {
     return (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex gap-8">
-              
+
                 {/* 메인 콘텐츠 영역 */}
                 <div className="flex-1">
                     {/* 제목 */}
@@ -104,6 +104,10 @@ export function WriteDetail() {
                             <span className="text-gray-400">·</span>
                             <span className="text-sm text-gray-500">
                                 {formatDate(post.post_created_at)}
+                            </span>
+                            <span className="text-gray-400">·</span>
+                            <span className="text-sm text-gray-500 flex items-center gap-1">
+                                조회수 {post.post_view}
                             </span>
                         </div>
                         {isMyPost && (
@@ -125,9 +129,9 @@ export function WriteDetail() {
                         )}
                     </div>
 
-                  
 
-                  
+
+
                     {/* 본문 콘텐츠 */}
                     <div className="prose prose-lg max-w-none text-left">
                         <ReactMarkdown
