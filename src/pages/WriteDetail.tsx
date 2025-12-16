@@ -78,27 +78,27 @@ export function WriteDetail() {
     }
 
     return (
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex gap-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden w-full">
+            <div className="flex gap-8 min-w-0">
 
                 {/* 메인 콘텐츠 영역 */}
-                <div className="flex-1">
+                <div className="flex-1 min-w-0 overflow-x-hidden">
                     {/* 제목 */}
                     <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-8 leading-tight text-left">
                         {post.post_title}
                     </h1>
 
                     {/* 작성자 정보 및 수정/삭제 버튼 */}
-                    <div className="flex items-center justify-between mb-16">
-                        <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-16">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             <span className="text-base text-gray-900 font-medium">
                                 {post.user_nickname || post.author?.user_nickname}
                             </span>
-                            <span className="text-gray-400">·</span>
+                            <span className="text-gray-400 hidden sm:inline">·</span>
                             <span className="text-sm text-gray-500">
                                 {formatDate(post.post_created_at)}
                             </span>
-                            <span className="text-gray-400">·</span>
+                            <span className="text-gray-400 hidden sm:inline">·</span>
                             <span className="text-sm text-gray-500 flex items-center gap-1">
                                 조회수 {post.post_view}
                             </span>
@@ -126,7 +126,7 @@ export function WriteDetail() {
 
 
                     {/* 본문 콘텐츠 */}
-                    <div className="prose prose-lg max-w-none text-left">
+                    <div className="prose prose-lg max-w-none text-left overflow-x-hidden w-full">
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm, remarkBreaks]}
                             components={{
@@ -140,11 +140,11 @@ export function WriteDetail() {
                                     if (Array.isArray(children) && children.length === 1) {
                                         const firstChild = children[0];
                                         if (firstChild && typeof firstChild === 'object' && 'type' in firstChild && firstChild.type === 'img') {
-                                            return <div className="my-8 flex justify-center">{children}</div>;
+                                            return <div className="my-8 flex justify-center w-full overflow-hidden min-w-0">{children}</div>;
                                         }
                                     }
                                     if (children && typeof children === 'object' && 'type' in children && children.type === 'img') {
-                                        return <div className="my-8 flex justify-center">{children}</div>;
+                                        return <div className="my-8 flex justify-center w-full overflow-hidden min-w-0">{children}</div>;
                                     }
                                     return <p className="mb-8 text-gray-700 leading-relaxed text-base">{children}</p>;
                                 },
@@ -160,16 +160,22 @@ export function WriteDetail() {
                                 ),
                                 code: ({ children, className }) => {
                                     const isInline = !className;
-                                    return isInline ? (
-                                        <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm text-gray-800 font-mono">
+                                    if (isInline) {
+                                        return (
+                                            <code className="text-gray-100 px-1.5 py-0.5 rounded text-sm font-mono">
+                                                {children}
+                                            </code>
+                                        );
+                                    }
+                                    // 코드 블록인 경우
+                                    return (
+                                        <code className="block bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-8 font-mono text-sm leading-relaxed">
                                             {children}
                                         </code>
-                                    ) : (
-                                        <code className={className}>{children}</code>
                                     );
                                 },
                                 pre: ({ children }) => (
-                                    <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-8">
+                                    <pre className="bg-gray-900 text-gray-100 p-0 rounded-lg overflow-x-auto mb-8">
                                         {children}
                                     </pre>
                                 ),
@@ -202,8 +208,13 @@ export function WriteDetail() {
                                     );
                                 },
                                 img: ({ src, alt }) => (
-                                    <div className="my-8 flex justify-center">
-                                        <img src={src} alt={alt} className="max-w-full h-auto rounded-lg" />
+                                    <div className="my-8 flex justify-center w-full overflow-hidden min-w-0">
+                                        <img 
+                                            src={src} 
+                                            alt={alt} 
+                                            className="max-w-full h-auto rounded-lg object-contain" 
+                                            style={{ maxWidth: '100%', width: '100%', height: 'auto', boxSizing: 'border-box' }}
+                                        />
                                     </div>
                                 ),
                             }}
