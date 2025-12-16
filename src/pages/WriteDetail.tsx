@@ -40,12 +40,7 @@ export function WriteDetail() {
         const day = date.getDate();
         return `${year}년 ${month}월 ${day}일`;
     }
-
-    const handleLike = () => {
-        setIsLiked(!isLiked);
-        setLikes(prev => isLiked ? prev - 1 : prev + 1);
-    }
-
+    
     // 본인 글인지 확인
     const isMyPost = user && post && (post.author?.user_id === user.user_id);
 
