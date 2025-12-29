@@ -24,6 +24,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   
   // 로그인/회원가입 성공 시 호출 (accessToken + user 함께 저장)
   setAuth: (accessToken: string, user: User) => {
+    // 로그인 성공 시 localStorage에 로그인 이력 저장
+    localStorage.setItem('has_logged_in', 'true');
     set({
       accessToken,
       user,
@@ -39,6 +41,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   
   // 로그아웃 시 호출
   clearAuth: () => {
+    // 로그아웃 시 localStorage에서 로그인 이력 제거
+    localStorage.removeItem('has_logged_in');
     set({
       accessToken: null,
       user: null,

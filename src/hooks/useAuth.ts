@@ -20,6 +20,15 @@ export function useAuth() {
       return;
     }
 
+    // 이전에 로그인한 적이 없으면 refreshToken API를 호출하지 않음
+    // (처음 방문한 사용자는 refreshToken이 없으므로 API 호출 불필요)
+    const hasLoggedIn = localStorage.getItem('has_logged_in');
+    if (!hasLoggedIn) {
+      // 로그인한 적이 없으면 복원 시도하지 않음
+      useAuthStore.getState().setRestoring(false);
+      return;
+    }
+
     // 세션 동안 이미 시도했다면 스킵 (반복 실행 방지)
     if (sessionStorage.getItem(RESTORE_AUTH_KEY) === 'true') {
       // 이미 시도했지만 복원 중 상태가 남아있을 수 있으므로 확인
@@ -54,13 +63,12 @@ export function useAuth() {
         sessionStorage.removeItem(RESTORE_AUTH_KEY);
       } catch (error: any) {
         // refreshToken이 없거나 만료된 경우 (로그인하지 않은 상태)
-        // 400 에러는 쿠키에 refreshToken이 없는 경우이므로 정상적인 상황
-        // 401 에러는 refreshToken이 만료된 경우
+        // 401 에러는 쿠키에 refreshToken이 없거나 만료된 경우이므로 정상적인 상황
         // 에러를 조용히 처리 (콘솔에 출력하지 않음)
         // 플래그는 유지하여 세션 동안 다시 시도하지 않음
         
         // 인증 상태 초기화 (혹시 모를 상태 불일치 방지)
-        if (error.response?.status === 400 || error.response?.status === 401) {
+        if (error.response?.status === 401) {
           useAuthStore.getState().clearAuth();
         } else {
           // 다른 에러의 경우에도 복원 상태 해제
