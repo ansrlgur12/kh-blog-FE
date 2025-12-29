@@ -250,13 +250,6 @@ export function Write() {
                 return newMap;
             });
 
-            // alt/파일명으로도 매핑 저장
-            // setFileByAltMap((prev) => {
-            //     const newMap = new Map(prev);
-            //     newMap.set(file.name, file);
-            //     return newMap;
-            // });
-
             // 마크다운 이미지 문법 생성
             const imageMarkdown = `![${file.name}](${tempUrl})`;
             imageMarkdowns.push(imageMarkdown);
@@ -433,9 +426,22 @@ export function Write() {
             }
 
             // TODO: 출간 API 호출 (제목, 내용 저장)
-        } catch (error) {
+        } catch (error: any) {
             console.error('파일 업로드 실패:', error);
-            alert('파일 업로드에 실패했습니다.');
+            
+            // 인증 에러인 경우 (토큰 갱신 실패로 리다이렉트 예정)
+            if (error?.isAuthError || error?.response?.status === 401) {
+                // 리다이렉트가 일어나므로 에러 메시지 표시하지 않음
+                // 하지만 상태는 리셋해야 함
+                setIsUploading(false);
+                return;
+            }
+            
+            // 네트워크 에러나 기타 에러인 경우
+            const errorMessage = error?.response?.data?.message || 
+                                error?.message || 
+                                '파일 업로드에 실패했습니다.';
+            alert(errorMessage);
         } finally {
             setIsUploading(false);
         }
